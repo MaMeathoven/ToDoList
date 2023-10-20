@@ -16,8 +16,11 @@ if (!File.Exists(FILE_NAME))
 tasks = loadFileToArray();
 
 //Main loop för programmet
-while(true){
+while (true)
+{
+    Console.Clear();
     printMenu();
+    printTasks(tasks);
 
     int choice = int.Parse(Console.ReadLine());
 
@@ -26,17 +29,12 @@ while(true){
         case 1:
             break;
         case 2:
-            AddTask(tasks);
+            tasks = AddTask(tasks);
             break;
         case 3:
             break;
     }
-
-    printTasks(tasks);
-    //skriv ut lista
-    break;
 }
-Console.Read();
 
 static void printMenu()
 {
@@ -44,15 +42,12 @@ static void printMenu()
     Console.WriteLine("1. Markera en task som klar");
     Console.WriteLine("2. Lägg till");
     Console.WriteLine("3. Ta bort");
-
-
-
 }
 static void printTasks(Task[] tasks)
 {
-
+    int i = 1;
     Console.WriteLine($"\n\n{"Task",-55}{"Deadline",-13}{"Time",-7}Status\n");
-    foreach  (Task task in tasks)
+    foreach (Task task in tasks)
     {
         /*switch (ColorChecker(task))
         {
@@ -71,11 +66,11 @@ static void printTasks(Task[] tasks)
 
         }*/
         Console.ForegroundColor = ColorChecker(task);
-        Console.WriteLine($"{task.Description,-55}{task.DeadLine.ToString("yyyy/MM/dd"), -13}{task.EstimatedHours, -7}{task.IsCompleted}");
+        Console.WriteLine($"{i}. {task.Description,-55}{task.DeadLine.ToString("yyyy/MM/dd"),-13}{task.EstimatedHours,-7}{task.IsCompleted}");
+        i++;
+
     }
-
     Console.ForegroundColor = ConsoleColor.Gray; //resettar till defaultfärgen för att undvika fel
-
 }
 
 static Task[] AddTask(Task[] tasks)
@@ -112,9 +107,10 @@ static Task[] AddTask(Task[] tasks)
     }
 
     //konverterar deadlinestring till rätt format
-    string[] split = deadLineString.Split(new char[] { '/' }, 3);
-    deadLine = new DateTime(int.Parse(split[2]), int.Parse(split[1]), int.Parse(split[0]));
+    //string[] split = deadLineString.Split(new char[] { '/' }, 3);
+    //deadLine = new DateTime(int.Parse(split[2]), int.Parse(split[1]), int.Parse(split[0]));
 
+    deadLine = DateTime.Parse(deadLineString);
 
     tasks = appendCSV(tasks, description, deadLine, estimatedHours, isCompleted);
 
@@ -124,6 +120,7 @@ static Task[] appendCSV(Task[] tasks, string description, DateTime deadLine, dou
 {
     StreamWriter writer = new StreamWriter(FILE_NAME, true);
     string appendString = description + ";" + deadLine + ";" + estimatedHours + ";" + isCompleted;
+    writer.Write("\n" + appendString);
     writer.Close();
 
     tasks = loadFileToArray();
@@ -131,7 +128,8 @@ static Task[] appendCSV(Task[] tasks, string description, DateTime deadLine, dou
 }
 
 
-static ConsoleColor ColorChecker(Task task){
+static ConsoleColor ColorChecker(Task task)
+{
 
     //Status
     //0: default (övriga fall)
@@ -152,7 +150,8 @@ static ConsoleColor ColorChecker(Task task){
     }
     else if (daysUntilDeadline >= 0) //jämför om deadline är efter datetime
     {
-        color = ConsoleColor.Red;    }
+        color = ConsoleColor.Red;
+    }
     else if (daysUntilDeadline >= -3)
     {
         color = ConsoleColor.Yellow;
@@ -180,7 +179,7 @@ static Task[] loadFileToArray()
 
         //konerterar den splittrade datan och matar in den i en temp-task
         string Description = data[0];
-        DateTime DeadLine = Convert.ToDateTime(data[1]);
+        DateTime DeadLine = DateTime.Parse(data[1]);
         double EstimatedHours = Convert.ToDouble(data[2]);
         bool IsCompleted = Convert.ToBoolean(data[3]);
 
