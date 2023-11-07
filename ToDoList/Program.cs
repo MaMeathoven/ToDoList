@@ -6,21 +6,22 @@ using System.Runtime.InteropServices;
 const string FILE_NAME = "list.csv";
 if (!File.Exists(FILE_NAME))
 {
-    File.Create(FILE_NAME);
+    StreamWriter writer = new StreamWriter(FILE_NAME);
+    writer.Close();
 }
 
 //Skapar en array och laddar in alla tasks från csv-filen
 Task[] tasks = new Task[0];
-tasks = loadFileToArray();
-tasks = sortArrayByDatetime(tasks);
+tasks = LoadFileToArray();
+tasks = SortArrayByDatetime(tasks);
 
 //Huvudloop
 while (true)
 {
     Console.Clear();
-    printMenu();
+    PrintMenu();
 
-    printTasks(tasks);
+    PrintTasks(tasks);
 
     Console.Write("\nVälj ett alternativ från menyn: ");
     int choice;
@@ -39,14 +40,14 @@ while (true)
     switch (choice)
     {
         case 1:
-            printTasks(tasks);
+            PrintTasks(tasks);
             Console.ReadKey();
             break;
         case 2:
             tasks = AddTask(tasks);
             break;
         case 3:
-            tasks = markTaskCompleted(tasks);
+            tasks = MarkTaskCompleted(tasks);
             break;
         case 4:
             Environment.Exit(0);
@@ -54,7 +55,7 @@ while (true)
     }
 }
 
-static void printMenu()
+static void PrintMenu()
 {
     Console.WriteLine("Meny");
     Console.WriteLine("1. Visa lista");
@@ -62,7 +63,7 @@ static void printMenu()
     Console.WriteLine("3. Ändra status");
     Console.WriteLine("4. Avsluta program");
 }
-static void printTasks(Task[] tasks)
+static void PrintTasks(Task[] tasks)
 {
     int i = 1;
     Console.WriteLine($"\n\n{"Nr.",-4}{"Beskrivning",-55}{"Deadline",-13}{"Time",-7}Status\n");
@@ -70,23 +71,29 @@ static void printTasks(Task[] tasks)
     foreach (Task task in tasks)
     {
         string status = "Klar";
-        if (!task.IsCompleted) status = "Inte klar";
+        if (!task.isCompleted) status = "Inte klar";
 
         Console.ForegroundColor = ColorChecker(task);
-        Console.WriteLine($"{i + ".",-3} {task.Description,-55}{task.DeadLine.ToString("yyyy/MM/dd"),-13}{task.EstimatedHours,-7}{status}");
+        Console.WriteLine($"{i + ".",-3} {task.description,-55}{task.deadLine.ToString("yyyy/MM/dd"),-13}{task.estimatedHours,-7}{status}");
         i++;
     }
     Console.ForegroundColor = ConsoleColor.Gray; //resettar till defaultfärgen för att undvika fel
 
 }//Funktion som skriver ut alla tasks i listan med hjälp av formatering.
 
-static Task[] sortArrayByDatetime(Task[] tasks)
+static Task[] SortArrayByDatetime(Task[] tasks)
 {
     //Struntar i sortering om listan är tom.
     if (tasks.Length == 0)
     {
         return tasks;
     }
+
+    Array.Sort(tasks, (x, y) => y.deadLine.CompareTo(x.deadLine));
+    return tasks;
+
+    
+    /*
     bool sorted = false;
 
     //Kör sorteringsalgoritm tills arrayen är sorterad.
@@ -97,7 +104,7 @@ static Task[] sortArrayByDatetime(Task[] tasks)
         foreach (Task task in tasks)
         {
             //Jämför datetime med nästa plats i arrayen och byter platser utefter det
-            if ((findIndex(tasks, task) >= 0) && (findIndex(tasks, task) < (tasks.Length - 1)))
+            if ((FindIndex(tasks, task) >= 0) && (FindIndex(tasks, task) < (tasks.Length - 1)))
             {
                 if (tasks[i + 1].DeadLine < task.DeadLine)
                 {
@@ -117,10 +124,8 @@ static Task[] sortArrayByDatetime(Task[] tasks)
             i++;
         }
     } while (!sorted);
-
-    return tasks;
-
-    static int findIndex(Task[] tasks, Task task)
+    
+    static int FindIndex(Task[] tasks, Task task)
     {
         int index = -1;
         for (int i = 0; i < tasks.Length; i++)
@@ -133,6 +138,7 @@ static Task[] sortArrayByDatetime(Task[] tasks)
         }
         return index;
     }
+    */
 }
 
 static Task[] AddTask(Task[] tasks)
@@ -182,32 +188,32 @@ static Task[] AddTask(Task[] tasks)
         isCompleted = false;
     }
 
-    tasks = appendCSV(tasks, description, deadLine, estimatedHours, isCompleted);
+    tasks = AppendCSV(tasks, description, deadLine, estimatedHours, isCompleted);
 
     return tasks;
 
-    static Task[] appendCSV(Task[] tasks, string description, DateTime deadLine, double estimatedHours, bool isCompleted)
+    static Task[] AppendCSV(Task[] tasks, string description, DateTime deadLine, double estimatedHours, bool isCompleted)
     {
         StreamWriter writer = new StreamWriter(FILE_NAME, true);
         string appendString = description + ";" + deadLine + ";" + estimatedHours + ";" + isCompleted;
-        writer.Write("\n"+appendString);
+        writer.WriteLine(appendString);
         writer.Close();
 
-        tasks = loadFileToArray();
-        tasks = sortArrayByDatetime(tasks);
+        tasks = LoadFileToArray();
+        tasks = SortArrayByDatetime(tasks);
         return tasks;
     }//Lägger till en task i CSV-filen och updaterar sedan arrayen med tasks utefter detta.
 
 }//Funktion för att lägga till en task
 
-static Task[] markTaskCompleted(Task[] tasks)
+static Task[] MarkTaskCompleted(Task[] tasks)
 {
     while (true)
     {
         Console.Clear();
 
         Console.WriteLine("Ändra status\n");
-        printTasks(tasks);
+        PrintTasks(tasks);
 
         Console.Write("Vilken/vilka punkter vill du ändra status på?(3,1,6 om flera): ");
         string input = Console.ReadLine();
@@ -216,7 +222,7 @@ static Task[] markTaskCompleted(Task[] tasks)
         {
             int index = int.Parse(input);
             index -= 1;
-            tasks[index].IsCompleted = !tasks[index].IsCompleted; //Ändrar "iscompleted" till motsatt 
+            tasks[index].isCompleted = !tasks[index].isCompleted; //Ändrar "iscompleted" till motsatt 
         }
         else
         {
@@ -235,7 +241,7 @@ static Task[] markTaskCompleted(Task[] tasks)
             {
                 int index = int.Parse(input2);
                 index -= 1;
-                tasks[index].IsCompleted = !tasks[index].IsCompleted;
+                tasks[index].isCompleted = !tasks[index].isCompleted;
             }
         }
 
@@ -246,14 +252,14 @@ static Task[] markTaskCompleted(Task[] tasks)
         int counter = 0;
         foreach (Task task in tasks)
         {
-            string appendString = task.Description + ";" + task.DeadLine + ";" + task.EstimatedHours + ";" + task.IsCompleted;
+            string appendString = task.description + ";" + task.deadLine + ";" + task.estimatedHours + ";" + task.isCompleted;
             if (counter != 0)
             {
-                writer.Write("\n"+appendString);
+                writer.WriteLine(appendString);
             }
             else if (counter == 0)
             {
-                writer.Write(appendString);
+                writer.WriteLine(appendString);
             }
             counter++;
         }
@@ -268,7 +274,7 @@ static ConsoleColor ColorChecker(Task task)
     //DateTime dateTime = new DateTime(2023, 09, 08);
     DateTime dateTime = DateTime.Now;
 
-    double daysUntilDeadline = Convert.ToDouble((dateTime - task.DeadLine).TotalDays);
+    double daysUntilDeadline = Convert.ToDouble((dateTime - task.deadLine).TotalDays);
 
     //Status
     //0: default (övriga fall)
@@ -277,7 +283,7 @@ static ConsoleColor ColorChecker(Task task)
     //3: deadline passed
 
     //Console.WriteLine(daysUntilDeadline);
-    if (task.IsCompleted)
+    if (task.isCompleted)
     {
         color = ConsoleColor.Green;
     }
@@ -296,7 +302,7 @@ static ConsoleColor ColorChecker(Task task)
     return color;
 }//Byter färg på text baserat på status av task
 
-static Task[] loadFileToArray()
+static Task[] LoadFileToArray()
 {
     //List<Task> tempTasks = new List<Task>();
 
@@ -320,15 +326,15 @@ static Task[] loadFileToArray()
 
 
         //konerterar den splittrade datan och matar in den i en temp-task
-        string Description = data[0];
-        DateTime DeadLine = DateTime.Parse(data[1]);
-        double EstimatedHours = Convert.ToDouble(data[2]);
-        bool IsCompleted = Convert.ToBoolean(data[3]);
+        string description = data[0];
+        DateTime deadLine = DateTime.Parse(data[1]);
+        double estimatedHours = Convert.ToDouble(data[2]);
+        bool isCompleted = Convert.ToBoolean(data[3]);
 
-        temp.Description = Description;
-        temp.DeadLine = DeadLine;
-        temp.EstimatedHours = EstimatedHours;
-        temp.IsCompleted = IsCompleted;
+        temp.description = description;
+        temp.deadLine = deadLine;
+        temp.estimatedHours = estimatedHours;
+        temp.isCompleted = isCompleted;
 
         tempTasks[counter] = temp;
         counter++;
@@ -340,8 +346,8 @@ static Task[] loadFileToArray()
 
 struct Task
 {
-    public string Description { get; set; }
-    public DateTime DeadLine { get; set; }
-    public double EstimatedHours { get; set; }
-    public bool IsCompleted { get; set; }
+    public string description { get; set; }
+    public DateTime deadLine { get; set; }
+    public double estimatedHours { get; set; }
+    public bool isCompleted { get; set; }
 }
